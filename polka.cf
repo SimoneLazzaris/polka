@@ -1,0 +1,11 @@
+port=9093
+bind=127.0.0.1
+defaultquota=500
+dbuser=polka
+dbpass=verysecretpassword
+dbhost=127.0.0.1
+dbport=3306
+dbname=policy
+badmailfrom_table=badmailfrom
+badmailto_table=badmailto
+policy_table=relay_policy
