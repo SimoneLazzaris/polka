@@ -185,6 +185,7 @@ func handleRequest(conn net.Conn, db *sql.DB) {
 		}
 	}
 	db.Ping()
+	db.Exec("set time_zone='+00:00'") // timezone UTC
 	db.Exec("set session TRANSACTION ISOLATION LEVEL REPEATABLE READ")
 	resp:=policy_verify(xdata, db)
 	conn.Write([]byte(fmt.Sprintf("action=%s\n\n",resp)))
