@@ -9,3 +9,4 @@ dbname=policy
 badmailfrom_table=badmailfrom
 badmailto_table=badmailto
 policy_table=relay_policy
+sender_accounting=0
