@@ -14,6 +14,7 @@ import (
 //	"log"
 	"log/syslog"
 	"flag"
+	"sync"
 )
 
 type connData struct {
@@ -26,6 +27,7 @@ type connData struct {
 var (
 	xlog *syslog.Writer
 	xdebug *bool
+	xmutex sync.Mutex
 )
 
 func init() {
@@ -125,6 +127,8 @@ func policy_verify(xdata connData, db *sql.DB) string {
 		default:
 			return "REJECT no credentials"
 	}
+	xmutex.Lock()
+	defer xmutex.Unlock()
 	err:=db.QueryRow("SELECT max, quota, unix_timestamp(ts) FROM "+cfg["policy_table"]+" where type=? and item=?",xtype, xitem).Scan(&mx, &quota, &ts)
 	switch {
 		case err==sql.ErrNoRows:
