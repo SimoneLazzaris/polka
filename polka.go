@@ -153,6 +153,7 @@ func policy_verify(xdata connData, db *sql.DB) string {
 			if (*xdebug) { fmt.Println("DECODED: ",fmax, fquota, last_ts) }
 	}
 	now=time.Now().Unix()
+	if (*xdebug) { fmt.Println("DeltaT: ",(now-last_ts)) }
 	fquota=math.Max(0.0,fquota-(float64(now-last_ts)*fmax/3600.0)+1.0)
 	if (*xdebug) { fmt.Println("NEW QUOTA: ", fquota) }
 	if fquota>fmax {
