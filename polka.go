@@ -95,9 +95,9 @@ func recipient_permitted(xdata connData, db *sql.DB) bool {
 }
 
 func policy_verify(xdata connData, db *sql.DB) string {
-	var xtype,xitem, mx, quota, ts string;
+	var xtype,xitem, mx, quota, ts, s_now string;
 	var fmax, fquota float64;
-	var last_ts, now int64;
+	var last_ts, i_now int64;
 	sender_accounting,err_a :=strconv.ParseInt(cfg["sender_accounting"],10,8)
 	if err_a!=nil { 
 		sender_accounting=0
@@ -129,7 +129,7 @@ func policy_verify(xdata connData, db *sql.DB) string {
 	}
 	xmutex.Lock()
 	defer xmutex.Unlock()
-	err:=db.QueryRow("SELECT max, quota, unix_timestamp(ts) FROM "+cfg["policy_table"]+" where type=? and item=?",xtype, xitem).Scan(&mx, &quota, &ts)
+	err:=db.QueryRow("SELECT max, quota, unix_timestamp(ts), unix_timestamp(now()) FROM "+cfg["policy_table"]+" where type=? and item=?",xtype, xitem).Scan(&mx, &quota, &ts, &s_now)
 	switch {
 		case err==sql.ErrNoRows:
 			if (*xdebug) { fmt.Println("NOT FOUND") }
@@ -137,6 +137,7 @@ func policy_verify(xdata connData, db *sql.DB) string {
 			fmax,_=strconv.ParseFloat(cfg["defaultquota"],64)
 			fquota=0
 			last_ts=time.Now().Unix()
+			i_now=time.Now().Unix()
 			_,err=db.Exec("INSERT INTO "+cfg["policy_table"]+" set type=?, item=?, max=?, quota=0, ts=now()",xtype, xitem, cfg["defaultquota"])
 			if (err!=nil) {
 				xlog.Err(err.Error())
@@ -150,11 +151,12 @@ func policy_verify(xdata connData, db *sql.DB) string {
 			fmax,_=strconv.ParseFloat(mx,64)
 			fquota,_=strconv.ParseFloat(quota,64)
 			last_ts,_=strconv.ParseInt(ts,10,64)
+			i_now,_=strconv.ParseInt(s_now,10,64)
 			if (*xdebug) { fmt.Println("DECODED: ",fmax, fquota, last_ts) }
 	}
-	now=time.Now().Unix()
-	if (*xdebug) { fmt.Println("DeltaT: ",(now-last_ts)) }
-	fquota=math.Max(0.0,fquota-(float64(now-last_ts)*fmax/3600.0)+1.0)
+	delta_t:=i_now-last_ts
+	if (*xdebug) { fmt.Println("DeltaT: ",delta_t) }
+	fquota=math.Max(0.0,fquota-(float64(delta_t)*fmax/3600.0)+1.0)
 	if (*xdebug) { fmt.Println("NEW QUOTA: ", fquota) }
 	if fquota>fmax {
 			xlog.Info(fmt.Sprintf("DEFERRING overquota for item %s:%s [%.2f/%.2f]",xtype,xitem,fquota,fmax))
