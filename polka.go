@@ -47,7 +47,7 @@ func main() {
 	defer l.Close()
 	
 	// open connection to the database
-	db,err:=sql.Open("mysql",fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?autocommit=true",cfg["dbuser"],cfg["dbpass"],cfg["dbhost"],cfg["dbport"],cfg["dbname"]))
+	db,err:=sql.Open("mysql",fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?autocommit=false",cfg["dbuser"],cfg["dbpass"],cfg["dbhost"],cfg["dbport"],cfg["dbname"]))
 	if (err!=nil) {
 		fmt.Println("ERROR CONNECTING MYSQL")
 		os.Exit(1)
@@ -129,7 +129,9 @@ func policy_verify(xdata connData, db *sql.DB) string {
 	}
 	xmutex.Lock()
 	defer xmutex.Unlock()
-	err:=db.QueryRow("SELECT max, quota, unix_timestamp(ts), unix_timestamp(now()) FROM "+cfg["policy_table"]+" where type=? and item=?",xtype, xitem).Scan(&mx, &quota, &ts, &s_now)
+	defer db.Exec("COMMIT") //defer db.Exec("COMMIT; UNLOCK TABLES;")
+	db.Exec("START TRANSACTION")
+	err:=db.QueryRow("SELECT max, quota, unix_timestamp(ts), unix_timestamp(now()) FROM "+cfg["policy_table"]+" where type=? and item=? FOR UPDATE",xtype, xitem).Scan(&mx, &quota, &ts, &s_now)
 	switch {
 		case err==sql.ErrNoRows:
 			if (*xdebug) { fmt.Println("NOT FOUND") }
