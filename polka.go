@@ -96,6 +96,11 @@ func policy_verify(xdata connData, db *sql.DB) string {
 	var xtype,xitem, mx, quota, ts string;
 	var fmax, fquota float64;
 	var last_ts, now int64;
+	sender_accounting,err_a :=strconv.ParseInt(cfg["sender_accounting"],10,8)
+	if err_a!=nil { 
+		sender_accounting=0
+	}
+		
 	if !sender_permitted(xdata,db) {
 		xlog.Info("Rejecting bad sender "+xdata.sender)
 		return "REJECT bad sender"
@@ -109,6 +114,10 @@ func policy_verify(xdata connData, db *sql.DB) string {
 			if (*xdebug) { fmt.Println("Using username: ", xdata.sasl_user) }
 			xtype="U"
 			xitem=xdata.sasl_user
+		case xdata.sender!="" && sender_accounting==1:
+			if (*xdebug) { fmt.Println("Using Sender: ", xdata.sender) }
+			xtype="S"
+			xitem=xdata.sender
 		case xdata.ip_address!="":
 			if (*xdebug) { fmt.Println("Using IP: ", xdata.ip_address) }
 			xtype="I"
