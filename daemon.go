@@ -9,9 +9,9 @@ import (
 
 // See https://github.com/golang/go/issues/227#issuecomment-235996646
 func daemon  (nochdir, noclose int) {
-	_,child:=os.LookupEnv("XCHILDX")
+	child:=os.Getenv("XCHILDX")
 	
-	if !child {
+	if child=="" {
 		// I am the parent, spawn child to run as daemon
 		binary, err := exec.LookPath(os.Args[0])
 		if err != nil {

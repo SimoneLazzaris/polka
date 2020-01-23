@@ -5,7 +5,7 @@ This simple daemon counts the number of messages sent by authenticated users OR 
 storing the information in a simple mysql table.
 
 By default, a new entry is created with a default limit (read by configuration), but that value can be overriden
-by the sysadmin simpli updating the table.
+by the sysadmin simply updating the table.
 
 In addition, the daemon refuses messages from/to blacklisted sender/recipient, also stored in mysql tables.
 
