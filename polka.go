@@ -142,8 +142,6 @@ func policy_verify(xdata connData, db *sql.DB) string {
 		return "DUNNO"
 	}
 	defer tx.Commit()
-	//defer db.Exec("COMMIT") //defer db.Exec("COMMIT; UNLOCK TABLES;")
-	//db.Exec("START TRANSACTION")
 	err=tx.QueryRow("SELECT max, quota, unix_timestamp(ts), unix_timestamp(now()) FROM "+cfg["policy_table"]+" where type=? and item=? FOR UPDATE",xtype, xitem).Scan(&mx, &quota, &ts, &s_now)
 	switch {
 		case err==sql.ErrNoRows:
